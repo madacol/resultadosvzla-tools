@@ -33,6 +33,11 @@ evita ser bloqueado por el servidor
 sh wget.sh -rc  'https://resultadosconvzla.com/'   
 #+end_src
 
+** md5check.sh
+
+Script que comprueba la integridad de las actas descargadas con las actas alojadas en https://static.resultadosconvzla.com.
+Recibe como parámetro una lista de archivos y por la salida estándar arroja el resultado de md5sum --check
+
 * instrucciones
 ** pasos opcionales :ACLARACIÓN:
 Los pasos 1) y 2) son opcionales, se puede utilizar la lista de URLs ya incluida en el archivo files.txt. 
@@ -97,3 +102,14 @@ chmod 755 count.sh
 #+end_src
 
 Esto generará un archivo en formato CSV llamado actas.csv, conteniendo como campos el número de acta y los votos de cada candidato.
+
+** Comprobar la integridad de las actas descargadas con las actas alojadas en https://static.resultadosconvzla.com.
+
+El script recibe las actas descargadas, calcula el MD5 hash, y luego busca el hash de esa acta en el servidor https://static.resultadosconvzla.com con el mismo nombre de archivo.
+No se descargan las actas del servidor, ya que el servidor ofrece el MD5 hash directamente en el header "etag" de la respuesta HTTP
+
+#+begin_src sh
+cd actas
+md5check.sh *.jpg > md5check.txt
+grep -v OK md5check.txt # mostrará las actas que no lograron pasar la verificación
+#+end_src
