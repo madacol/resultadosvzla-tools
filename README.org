@@ -38,6 +38,9 @@ sh wget.sh -rc  'https://resultadosconvzla.com/'
 Script que comprueba la integridad de las actas descargadas con las actas alojadas en https://static.resultadosconvzla.com.
 Recibe como parámetro una lista de archivos y por la salida estándar arroja el resultado de md5sum --check
 
+El script recibe las actas descargadas, calcula el MD5 hash, y luego busca el hash de esa acta en el servidor https://static.resultadosconvzla.com con el mismo nombre de archivo.
+No se descargan las actas del servidor, ya que el servidor ofrece el MD5 hash directamente en el header "etag" de la respuesta HTTP
+
 * instrucciones
 ** pasos opcionales :ACLARACIÓN:
 Los pasos 1) y 2) son opcionales, se puede utilizar la lista de URLs ya incluida en el archivo files.txt. 
@@ -105,11 +108,13 @@ Esto generará un archivo en formato CSV llamado actas.csv, conteniendo como cam
 
 ** Comprobar la integridad de las actas descargadas con las actas alojadas en https://static.resultadosconvzla.com.
 
-El script recibe las actas descargadas, calcula el MD5 hash, y luego busca el hash de esa acta en el servidor https://static.resultadosconvzla.com con el mismo nombre de archivo.
-No se descargan las actas del servidor, ya que el servidor ofrece el MD5 hash directamente en el header "etag" de la respuesta HTTP
-
 #+begin_src sh
 cd actas
-md5check.sh *.jpg > md5check.txt
-grep -v OK md5check.txt # mostrará las actas que no lograron pasar la verificación
+sh md5check.sh *.jpg > md5check.txt
+#+end_src
+
+Esto generará un archivo de texto plano conteniendo el resultado que arroja md5sum --check para cada acta. Para filtrar las actas que no lograron pasar la verificación, se puede ejecutar:
+
+#+begin_src sh
+grep -v OK md5check.txt
 #+end_src
