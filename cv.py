@@ -13,6 +13,13 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
+LOG_LEVELS = [
+    logging.CRITICAL,
+    logging.ERROR,
+    logging.WARNING,
+    logging.INFO,
+    logging.DEBUG,
+]
 
 LOG = logging.getLogger(__name__)
 COLUMNS = ["Archivo","Acta","Nulos","Vacios","Maduro","Martinez","Bertucci","Brito","Ecarri","Fermin","Ceballos","Gonzalez","Marquez","Rausseo"]
@@ -121,6 +128,8 @@ def show(img):
     cv2.waitKey(0)
 
 def process_img(filename, args):
+    logging.basicConfig(level=LOG_LEVELS[min(len(LOG_LEVELS) - 1, args.verbose)])
+
     img = cv2.imread(filename)
     if not isinstance(img, np.ndarray):
         raise FileNotFoundError(f"file not found: {filename}")
@@ -180,14 +189,6 @@ def sumi(s):
     return sum([int(i) for i in s])
 
 if __name__ == '__main__':
-    LOG_LEVELS = [
-        logging.CRITICAL,
-        logging.ERROR,
-        logging.WARNING,
-        logging.INFO,
-        logging.DEBUG,
-    ]
-
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs="*")
     parser.add_argument('-v', '--verbose', action="count", default=0)
@@ -205,7 +206,7 @@ if __name__ == '__main__':
     if args.debug:
         concurrent_executor = concurrent.futures.ProcessPoolExecutor
     else:
-        concurrent_executor = concurrent.futures.ThreadPoolExecutor
+        concurrent_executor = concurrent.futures.ProcessPoolExecutor
 
     logging.basicConfig(level=LOG_LEVELS[min(len(LOG_LEVELS) - 1, args.verbose)])
     class stats:
