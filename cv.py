@@ -182,13 +182,20 @@ def process_img(filename, args):
                 r = r.split(',')
                 votes = {p: int(v) for p, v in zip(PARTIES, r)}
                 votes = {c: sum([votes[p] for p in CANDIDATES[c]]) for c in CANDIDATES}
-                return([a[:9], int(n), int(v)] + [votes[v] for v in votes])
+                LOG.warning(votes)
+
+                del img
+                del img_cache
+                del proc_img
+                return([a, int(n), int(v)] + [votes[v] for v in votes])
 
             except Exception as e:
                 LOG.warning(f"{filename}, decoder {d}, quirk {q} failed with {(result, e)}")
                 quirks[f"{d}:{q}"] = (result, e)
         img = img_cache
 
+    del img
+    del img_cache
     raise ValueError(f"Could not decode {filename}, tried {quirks}")
 
 def sumi(s):
