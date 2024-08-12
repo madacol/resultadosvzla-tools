@@ -200,6 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-c', '--csv', default="./decoded.csv")
     parser.add_argument('-F', '--failed-csv', default="./failed.csv")
+    parser.add_argument('-2', '--duplicates-csv', default="./duplicate.csv")
     parser.add_argument('-P', '--max-procs', default=32, type=int)
     parser.add_argument('-n', '--non-destructive', action='store_true')
 
@@ -217,6 +218,8 @@ if __name__ == '__main__':
 
     df = load_csv(args.csv)
     fdf = load_csv(args.failed_csv, columns=['Archivo'])
+    ddf = load_csv(args.duplicates_csv)
+
     @throttle(2)
     def write_df():
         df.to_csv(args.csv, index = False)
@@ -225,9 +228,13 @@ if __name__ == '__main__':
     def write_fdf():
         fdf.to_csv(args.failed_csv, index = False)
 
+    @throttle(2)
+    def write_ddf():
+        ddf.to_csv(args.duplicates_csv, index = False)
 
     to_process = []
     solved = df.to_records()['Archivo']
+    dups = ddf.to_records()['Archivo']
 
     if os.path.isdir(args.filename[0]):
         args.filename = [os.path.join(args.filename[0], f) for f in os.listdir(args.filename[0])]
@@ -237,7 +244,7 @@ if __name__ == '__main__':
     else:
         tqdm.write("trimming solved files")
         for fn in tqdm(args.filename):
-            if not fn in solved:
+            if not fn in solved and not fn in dups:
                 to_process.append(fn)
     skipped = len(args.filename) - len(to_process)
 
@@ -261,12 +268,20 @@ if __name__ == '__main__':
                         stats.error +=1
                     else:
                         row = [filename] + result
-                        if df.loc[(df['Acta'] == int(result[0]))].empty:
-                            df.loc[len(df)] = row
-                        else:
-                            df.loc[(df['Acta'] == result[0])] = row
+                        acta = result[0]
+                        try:
+                            if df.loc[(df['Acta'] == acta)].empty:
+                                df.loc[len(df)] = row
+                            else:
+                                ddf = pd.concat([ddf, df.loc[(df['Acta'] == acta)]])
+                                ddf.loc[len(ddf)] = row
 
-                        df.to_csv(args.csv, index = False)
+                                df.loc[(df['Acta'] == result[0])] = row
+                                write_ddf()
+                        except Exception as e:
+                            traceback.print_exception(e)
+
+                        write_df()
                         stats.success +=1
 
                     bar.update(1)
