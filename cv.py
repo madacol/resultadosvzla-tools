@@ -82,7 +82,8 @@ def threshold_binary(img, args=[55, 255]):
     ret, img = cv2.threshold(img, 255 - int(dist), 255, cv2.THRESH_BINARY)
     return img
 
-def threshold_white(img, dist=1):
+def threshold_white(img, args=[1]):
+    dist, = args
     if len(img.shape) > 2 and img.shape[2] > 1:
        img = to_gray(img)
 
@@ -94,15 +95,18 @@ def threshold_white(img, dist=1):
 
     return img
 
-def resize(img, rate=2):
+def resize(img, args=[2]):
+    rate, = args
     shape = img.shape
     half = cv2.resize(img, None, fx=1/rate, fy=1/rate, interpolation = cv2.INTER_CUBIC)
-    return cv2.resize(half, None, fx=rate, fy=rate, interpolation = cv2.INTER_CUBIC)
+    img = cv2.resize(half, None, fx=rate, fy=rate, interpolation = cv2.INTER_CUBIC)
+    return half
 
 def quirk_crop(img):
     h = img.shape[0]
     w = img.shape[1]
     c = img[h-int(w*1.1):h,0:w]
+
     return c
 
 QUIRKS = {
