@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
+from decoratorOperations import throttle
+
 LOG_LEVELS = [
     logging.CRITICAL,
     logging.ERROR,
@@ -215,6 +217,14 @@ if __name__ == '__main__':
 
     df = load_csv(args.csv)
     fdf = load_csv(args.failed_csv, columns=['Archivo'])
+    @throttle(2)
+    def write_df():
+        df.to_csv(args.csv, index = False)
+
+    @throttle(2)
+    def write_fdf():
+        fdf.to_csv(args.failed_csv, index = False)
+
 
     to_process = []
     solved = df.to_records()['Archivo']
@@ -247,7 +257,7 @@ if __name__ == '__main__':
                         LOG.info('%r generated an exception: %s' % (filename, e))
                         if fdf.loc[fdf['Archivo'] == filename].empty:
                             fdf.loc[len(fdf)] = [filename]
-                            fdf.to_csv(args.failed_csv, index = False)
+                            write_fdf()
                         stats.error +=1
                     else:
                         row = [filename] + result
